@@ -48,6 +48,45 @@ test('register a new user', async () => {
   expect(registerRes2.body.user).toMatchObject(expectedUser);
 });
 
+test('login user that does not exist', async () =>{
+  const badUser = {name: 'baddie', email: 'baddie@doesnotexist.com', password: 'bad'};
+  const loginRes = await request(app).put('/api/auth').send(badUser);
+  expect(loginRes.status).toBe(404);
+  expect(loginRes.body.message).toMatch('unknown user');
+});
+
+
+test('admin login', async () => {
+  const adminUser = await createAdminUser();
+  //const registerRes = await request(app).put('/api/auth').send(adminUser);
+  const loginRes = (await request(app).put('/api/auth').send(adminUser));
+  expect(loginRes.status).toBe(200);
+  expectValidJwt(loginRes.body.token);
+  const expectedUser = { ...adminUser, roles: [{ role: 'admin' }] };
+  delete expectedUser.password;
+  //password is not returned in the response
+  expect(loginRes.body.user).toMatchObject(expectedUser);
+
+});
+
+test('admin login with bad password', async () => {
+  const adminUser = await createAdminUser();
+  adminUser.password = 'badpassword';
+  const loginRes = await request(app).put('/api/auth').send(adminUser);
+  expect(loginRes.status).toBe(404);
+  expect(loginRes.body.message).toMatch('unknown user');
+});
+
+
+test('update user', async () => {
+const loginRes = await request(app).put('/api/auth').send(testUser);
+const authToken = loginRes.body.token; // Use this token instead of testUserAuthToken
+
+const updateRes = await request(app).put(`/api/auth/${loginRes.body.user.id}`).set('Authorization', `Bearer ${authToken}`).send({email: "new@gmail", password: "newpass"});
+
+expect(updateRes.status).toBe(200);
+expect(updateRes.body.email).toBe("new@gmail"); // Use toBe instead of toMatchObject for a single string
+});
 
 function expectValidJwt(potentialJwt) {
   expect(potentialJwt).toMatch(/^[a-zA-Z0-9\-_]*\.[a-zA-Z0-9\-_]*\.[a-zA-Z0-9\-_]*$/);
