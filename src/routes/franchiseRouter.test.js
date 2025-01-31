@@ -44,6 +44,7 @@ test('create a new franchise', async () => {
   expect(createRes.body.name).toBe(newFranchise.name);
   //delete the franchise so i can re-use the same name in the database
   const response = await request(app).delete(`/api/franchise/${createRes.body.id}`).set('Authorization', `Bearer ${adminAuthToken}`);
+  expect(response.status).toBe(200);
 });
 
 test('delete a franchise', async () => {
@@ -68,8 +69,10 @@ test('create a new store and then delete it', async () => {
   expect(createRes.body.name).toBe(newStore.name);
   //delete the store so i can re-use the same name in the database
   const deleteRes = await request(app).delete(`/api/franchise/${franchiseRes.body.id}/store/${createRes.body.id}`).set('Authorization', `Bearer ${adminAuthToken}`);
+  expect(deleteRes.status).toBe(200);
   //delete Franchise also
   const response = await request(app).delete(`/api/franchise/${franchiseRes.body.id}`).set('Authorization', `Bearer ${adminAuthToken}`);
+  expect(response.status).toBe(200);
 });
 
 function expectValidJwt(potentialJwt) {
