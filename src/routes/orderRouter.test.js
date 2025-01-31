@@ -24,7 +24,34 @@ beforeAll(async () => {
   expectValidJwt(adminAuthToken);
 });
 
+test("get pizza menu", async () => {
+  const menuRes = await request(app).get('/api/order/menu');
+  expect(menuRes.status).toBe(200);
+  //expect(Array.isArray(response.body)).toBe(true);
+  expect(menuRes.body[1]).toHaveProperty('price');
+});
 
+test("Add an item to the menu, then delete it", async () => {
+const newPizza = {title: "Student", description: "No topping, no sauce, just carbs", image:"pizza9.png", price: 0.0001 };
+  //const menuItem = {title: "the deez special", description: "pep, mozz, deep dish, with special hot honey", image: "deePizza.png", price: 10.89}
+  //const newwePizza = {title: 'Pepperoni', image:'pizza2.png', price: 0.023, description: 'Spicy treat'};
+  const AddMenuRes = await request(app).put('/api/order/menu').set('Authorization', `Bearer ${adminAuthToken}`).send(newPizza);
+
+  expect(AddMenuRes.status).toBe(200);
+  expect(AddMenuRes.body[13].title).toBe("Student");
+});
+
+test("create an order", async () => {
+  const createOrderRes = await request(app).post('/api/order').set('Authorization', `Bearer ${testUserAuthToken}`).send({franchiseId: 1, storeId: 1, items:[{menuId: 1, description: "Veggie", price: 0.05}]});
+  expect(createOrderRes.status).toBe(200);
+  expect(createOrderRes.body).toHaveProperty('order');
+});
+
+test("get an order", async () => {
+  const getOrderRes = await request(app).get('/api/order').set('Authorization', `Bearer ${testUserAuthToken}`);
+  expect(getOrderRes.status).toBe(200);
+  expect(getOrderRes.body).toHaveProperty("dinerId");
+});
 
 function expectValidJwt(potentialJwt) {
     expect(potentialJwt).toMatch(/^[a-zA-Z0-9\-_]*\.[a-zA-Z0-9\-_]*\.[a-zA-Z0-9\-_]*$/);
