@@ -42,13 +42,13 @@ jobs:
 
       - name: Write config file
         run: |
-           echo "module.exports =  {
-            jwtSecret: 'peesha',
+          echo "module.exports = {
+            jwtSecret: '${{ secrets.JWT_SECRET }}',
             db: {
               connection: {
                 host: '127.0.0.1',
                 user: 'root',
-                password: 'DavinDee144218!',
+                password: 'tempdbpassword',
                 database: 'pizza',
                 connectTimeout: 60000,
               },
@@ -56,9 +56,10 @@ jobs:
             },
             factory: {
               url: 'https://pizza-factory.cs329.click',
-              apiKey: 'd27f60ec1a9645e681c86ab25ae72573',
+              apiKey: '${{ secrets.FACTORY_API_KEY }}',
             },
-            };" > src/config.js
+          };" > src/config.js
+
       - name: Tests
         run: npm test
 
