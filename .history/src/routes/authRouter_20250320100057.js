@@ -177,7 +177,7 @@ const metrics = require('../metrics.js');
 const authRouter = express.Router();
 
 // Track the endpoints with metrics
-// authRouter.use(metrics.requestTracker);
+authRouter.use(metrics.requestTracker);
 
 authRouter.endpoints = [
   {

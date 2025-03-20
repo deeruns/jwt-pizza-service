@@ -146,28 +146,6 @@
 // module.exports = { authRouter, setAuthUser };
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const config = require('../config.js');
@@ -177,7 +155,7 @@ const metrics = require('../metrics.js');
 const authRouter = express.Router();
 
 // Track the endpoints with metrics
-// authRouter.use(metrics.requestTracker);
+authRouter.use(metrics.requestTracker);
 
 authRouter.endpoints = [
   {

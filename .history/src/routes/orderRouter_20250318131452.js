@@ -6,7 +6,7 @@ const { asyncHandler, StatusCodeError } = require('../endpointHelper.js');
 const metrics = require('../metrics.js');
 const orderRouter = express.Router();
 
-// orderRouter.use(metrics.requestTracker);
+orderRouter.use(metrics.requestTracker);
 
 orderRouter.endpoints = [
   {

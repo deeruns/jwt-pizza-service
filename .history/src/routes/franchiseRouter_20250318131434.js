@@ -6,7 +6,7 @@ const metrics = require('../metrics.js');
 const franchiseRouter = express.Router();
 
 //track the endpoints
-// franchiseRouter.use(metrics.requestTracker);
+franchiseRouter.use(requestTracker);
 
 franchiseRouter.endpoints = [
   {
