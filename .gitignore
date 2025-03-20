@@ -6,3 +6,4 @@ coverage
 dist
 note.md
 src/version.json
+.history
