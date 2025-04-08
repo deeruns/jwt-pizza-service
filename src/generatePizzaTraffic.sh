@@ -135,19 +135,15 @@ pid9=$!
 # Simulate diner ordering 21 pizzas and checking orders every 6 minutes
 while true; do
   response=$(curl -s -X PUT "$host/api/auth" -d '{"email":"d@jwt.com", "password":"diner"}' -H 'Content-Type: application/json')
-  token=$(echo $response | jq -r '.token')
+  token=$(echo "$response" | jq -r '.token')
+  if [ "$token" == "null" ] || [ -z "$token" ]; then echo "Bulk diner auth failed: $response"; fi
   echo "Login diner for bulk order..."
 
-  # Generate 21 pizza items
-  items=""
-  for i in {1..21}; do
-    items="$items{\"menuId\": 1, \"description\": \"Veggie $i\", \"price\": 0.05}"
-    [ $i -lt 21 ] && items="$items,"
-  done
+  items=$(for i in {1..15}; do echo "{\"menuId\": 1, \"description\": \"Veggie $i\", \"price\": 0.05}"; done | paste -sd,)
   order_payload="{\"franchiseId\": 1, \"storeId\": 1, \"items\": [$items]}"
   
   curl -s -X POST "$host/api/order" -H 'Content-Type: application/json' -H "Authorization: Bearer $token" -d "$order_payload" > /dev/null
-  echo "Ordered 21 pizzas..."
+  echo "Ordered 15 pizzas..."
   
   sleep 10
   curl -s "$host/api/order" -H "Authorization: Bearer $token" > /dev/null

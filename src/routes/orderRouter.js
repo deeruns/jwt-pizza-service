@@ -5,9 +5,10 @@ const { authRouter } = require('./authRouter.js');
 const { asyncHandler, StatusCodeError } = require('../endpointHelper.js');
 const metrics = require('../metrics.js');
 const orderRouter = express.Router();
+orderRouter.use(express.json());
+orderRouter.use(metrics.requestTracker);
 
-// orderRouter.use(metrics.requestTracker);
-
+let enableChaos = false;
 orderRouter.endpoints = [
   {
     method: 'GET',
@@ -40,7 +41,62 @@ orderRouter.endpoints = [
     example: `curl -X POST localhost:3000/api/order -H 'Content-Type: application/json' -d '{"franchiseId": 1, "storeId":1, "items":[{ "menuId": 1, "description": "Veggie", "price": 0.05 }]}'  -H 'Authorization: Bearer tttttt'`,
     response: { order: { franchiseId: 1, storeId: 1, items: [{ menuId: 1, description: 'Veggie', price: 0.05 }], id: 1 }, jwt: '1111111111' },
   },
+  {
+    method: 'PUT',
+    path: '/api/order/chaos/:state',
+    requiresAuth: true,
+    description: 'Toggle chaos mode for the order endpoint (admin only)',
+    example: `curl -X PUT localhost:3000/api/order/chaos/true -H 'Authorization: Bearer tttttt'`,
+    response: { chaos: true },
+  },
 ];
+
+orderRouter.put(
+  '/chaos/:state',
+  authRouter.authenticateToken,
+  asyncHandler(async (req, res) => {
+    if (req.user.isRole(Role.Admin)) {
+      enableChaos = req.params.state === 'true';
+    }
+
+    res.json({ chaos: enableChaos });
+  })
+);
+
+orderRouter.post('/', (req, res, next) => {
+  if (enableChaos && Math.random() < 0.5) {
+    throw new StatusCodeError('Chaos monkey', 500);
+  }
+  next();
+});
+
+
+
+// orderRouter.post(
+//   '/',
+//   authRouter.authenticateToken,
+//   (req, res, next) => {
+//     if (enableChaos && Math.random() < 0.5) {
+//       throw new StatusCodeError('Chaos monkey struck - order failed', 500);
+//     }
+//     next();
+//   },
+//   asyncHandler(async (req, res) => {
+//     const orderReq = req.body;
+//     const order = await DB.addDinerOrder(req.user, orderReq);
+//     const r = await fetch(`${config.factory.url}/api/order`, {
+//       method: 'POST',
+//       headers: { 'Content-Type': 'application/json', authorization: `Bearer ${config.factory.apiKey}` },
+//       body: JSON.stringify({ diner: { id: req.user.id, name: req.user.name, email: req.user.email }, order }),
+//     });
+//     const j = await r.json();
+//     if (r.ok) {
+//       res.send({ order, reportSlowPizzaToFactoryUrl: j.reportUrl, jwt: j.jwt });
+//     } else {
+//       res.status(500).send({ message: 'Failed to fulfill order at factory', reportPizzaCreationErrorToPizzaFactoryUrl: j.reportUrl });
+//     }
+//   })
+
 
 // getMenu
 orderRouter.get(

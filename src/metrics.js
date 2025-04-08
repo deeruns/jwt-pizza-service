@@ -70,9 +70,13 @@ class Metrics {
 
     requestTracker(req, res, next) {
         const start = process.hrtime();
+        
         const method = req.method;
         const route = req.route ? req.route.path : req.originalUrl || req.path;
         const requestKey = `${method}:${route}`;
+        console.log(`Method: ${method}, Route: ${route}`);
+
+        console.log(`requestTracker: ${method} ${route}, body:`, req.body);
 
         // Track active users
         if (req.headers.authorization) {
@@ -89,17 +93,17 @@ class Metrics {
         this.methodCounters.set(method, currentMethodCount + 1);
 
         // Special handling for pizza orders
-        if (method === 'POST' && route === '/api/order') {
-            if (req.body && req.body.items) {
-                const items = req.body.items;
-                const orderTotal = items.reduce((sum, item) => sum + (item.price || 0), 0);
-                this.pizzaPurchases += items.length;
-                this.pizzaRevenue += orderTotal;
-                console.log(`Pizza order detected: ${items.length} pizzas, Revenue: ${orderTotal}`);
-            } else {
-                console.log('No items found in /api/order request body:', req.body);
-            }
-        }
+        if (method === 'POST' && req.originalUrl === '/api/order') {
+          if (req.body && req.body.items) {
+              const items = req.body.items;
+              const orderTotal = items.reduce((sum, item) => sum + (item.price || 0), 0);
+              this.pizzaPurchases += items.length;
+              this.pizzaRevenue += orderTotal;
+              console.log(`Pizza order detected: ${items.length} pizzas, Revenue: ${orderTotal}`);
+          } else {
+              console.log('No items found in /api/order request body:', req.body);
+          }
+      }
 
         res.on('finish', () => {
             const [seconds, nanoseconds] = process.hrtime(start);
